@@ -21,3 +21,9 @@ service-account*.json
 .DS_Store
 *.zip
 *.log
+
+# Curriculum y datos personales: el repositorio es público
+cv*.txt
+cv*.md
+*.pdf
+*.docx

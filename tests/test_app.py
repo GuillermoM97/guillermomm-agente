@@ -156,6 +156,25 @@ def test_card_and_a2a(client):
     assert client.get("/").json()["open_responses_url"] == "https://example.com/v1/responses"
 
 
+def test_cv_loaded_from_mounted_file(tmp_path):
+    cv = tmp_path / "cv.txt"
+    cv.write_text("Experiencia: analista de datos.\n", encoding="utf-8")
+    system = api.load_system(cv)
+    assert "demostración" in system
+    assert "<curriculum>\nExperiencia: analista de datos.\n</curriculum>" in system
+    assert api.NO_CV not in system
+
+
+@pytest.mark.parametrize("content", [None, "  \n"])
+def test_missing_or_empty_cv(tmp_path, content):
+    cv = tmp_path / "cv.txt"
+    if content is not None:
+        cv.write_text(content, encoding="utf-8")
+    system = api.load_system(cv)
+    assert system.endswith(api.NO_CV)
+    assert "<curriculum>" not in system
+
+
 def test_real_google_sdk_with_simulated_http(monkeypatch):
     """Ejercita el SDK y backend reales; solo se sustituye el transporte HTTP."""
     requests = []

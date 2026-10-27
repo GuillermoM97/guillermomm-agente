@@ -6,3 +6,7 @@ __pycache__
 tests
 *.key
 .env*
+cv*.txt
+cv*.md
+*.pdf
+*.docx

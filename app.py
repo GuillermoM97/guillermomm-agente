@@ -19,11 +19,27 @@ from jsonschema import Draft202012Validator
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 API_TOKEN = os.getenv("AGENT_API_TOKEN", "")
 BASE_URL = os.getenv("PUBLIC_BASE_URL", "http://localhost:8080").rstrip("/")
-SYSTEM = Path(__file__).with_name("instructions.txt").read_text(encoding="utf-8")
+# El CV no vive en el repositorio (es público): Cloud Run lo monta desde Secret Manager.
+CV_PATH = Path(os.getenv("CV_PATH", "/cv/cv.txt"))
+NO_CV = ("Todavía no se ha cargado ningún currículum. Si te preguntan por la experiencia "
+         "de tu dueño, di que aún no se ha cargado su información.")
+logger = logging.getLogger("agent")
+
+
+def load_system(cv_path):
+    system = Path(__file__).with_name("instructions.txt").read_text(encoding="utf-8").strip()
+    cv = cv_path.read_text(encoding="utf-8").strip() if cv_path.is_file() else ""
+    # Registrar solo si hay CV, nunca su contenido.
+    logger.warning("cv_loaded=%s", bool(cv))
+    if not cv:
+        return system + "\n\n" + NO_CV
+    return system + "\n\nCurrículum de tu dueño:\n<curriculum>\n" + cv + "\n</curriculum>"
+
+
+SYSTEM = load_system(CV_PATH)
 SCHEMA = json.loads(Path(__file__).with_name("openresponses-openapi.json").read_text())
 REQUEST_SCHEMA = {"$ref": "#/components/schemas/CreateResponseBody", **SCHEMA}
 VALIDATOR = Draft202012Validator(REQUEST_SCHEMA)
-logger = logging.getLogger("agent")
 
 
 @asynccontextmanager

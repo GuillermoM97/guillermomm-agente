@@ -20,8 +20,26 @@ bash deploy.sh
 ```
 
 El repositorio no necesita claves de Google: Cloud Run usa su cuenta de servicio
-y la clave de acceso del agente se guarda en Secret Manager. Mantén el currículum
-y otros datos personales fuera del repositorio hasta decidir su visibilidad.
+y la clave de acceso del agente se guarda en Secret Manager.
+
+## Cargar el currículum (fuera del repositorio)
+
+El repositorio es público, así que el CV NUNCA se guarda aquí. Vive en el secreto
+`agente-cv` de Secret Manager y Cloud Run lo monta en `/cv/cv.txt`.
+
+1. Escribe tu CV en texto plano (`cv.txt`, máximo 64 KiB). Incluye solo lo que
+   aceptas que el agente comparta con quien tenga la clave Bearer.
+2. Súbelo a tu carpeta personal de Cloud Shell (⋮ → Subir archivo), no al repo.
+3. Despliega indicando la ruta:
+
+```bash
+CV_FILE=~/cv.txt bash deploy.sh
+```
+
+Para actualizarlo, repite el comando con el archivo nuevo. Después de cargarlo,
+`bash deploy.sh` sin `CV_FILE` conserva el CV ya guardado. El script se niega a
+usar un CV que esté dentro de la carpeta del repositorio, y `.gitignore`,
+`.gcloudignore` y `.dockerignore` excluyen `cv*.txt`, `cv*.md`, PDF y Word.
 
 ## Alternativa: desplegar desde el ZIP en Cloud Shell
 
@@ -124,7 +142,7 @@ Conserva ese terminal abierto. Las llamadas necesitan la misma clave Bearer.
 ## Archivos y siguientes pasos
 
 - `app.py`: API y traducción Gemini → Open Responses.
-- `instructions.txt`: instrucciones; después añadiremos la información del CV.
+- `instructions.txt`: instrucciones públicas; el CV se añade desde Secret Manager.
 - `deploy.sh`: despliegue en tu proyecto.
 - `smoke.py`: prueba real sin dependencias adicionales.
 - `tests/test_app.py`: pruebas locales de protocolo y errores.
