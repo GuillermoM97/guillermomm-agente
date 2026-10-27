@@ -19,4 +19,4 @@ No se ejecutaron aquí:
 - Suite oficial de compliance completa de Open Responses o A2A.
 
 `bash deploy.sh` ejecutará la prueba real de Gemini después de desplegar desde
-tu Cloud Shell. La demostración todavía no contiene el currículum.
+tu Cloud Shell. El currículum se carga desde Secret Manager (ver README).

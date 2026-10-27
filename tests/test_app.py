@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
@@ -10,6 +11,8 @@ from google.genai import types
 from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
 import app as api
+
+INSTRUCTIONS = Path(api.__file__).with_name("instructions.txt").read_text(encoding="utf-8").strip()
 
 
 def validate(value, name):
@@ -39,7 +42,7 @@ def client(monkeypatch):
 
     async def backend(contents, instructions, limit):
         assert contents[-1].role == "user"
-        assert "demostración" in instructions
+        assert instructions.startswith(api.SYSTEM)
         usage = SimpleNamespace(prompt_token_count=4, candidates_token_count=3,
                                 thoughts_token_count=2, cached_content_token_count=0)
         yield "Hola ", None, None
@@ -160,7 +163,7 @@ def test_cv_loaded_from_mounted_file(tmp_path):
     cv = tmp_path / "cv.txt"
     cv.write_text("Experiencia: analista de datos.\n", encoding="utf-8")
     system = api.load_system(cv)
-    assert "demostración" in system
+    assert system.startswith(INSTRUCTIONS)
     assert "<curriculum>\nExperiencia: analista de datos.\n</curriculum>" in system
     assert api.NO_CV not in system
 
@@ -171,8 +174,7 @@ def test_missing_or_empty_cv(tmp_path, content):
     if content is not None:
         cv.write_text(content, encoding="utf-8")
     system = api.load_system(cv)
-    assert system.endswith(api.NO_CV)
-    assert "<curriculum>" not in system
+    assert system == INSTRUCTIONS + "\n\n" + api.NO_CV
 
 
 def test_real_google_sdk_with_simulated_http(monkeypatch):
